@@ -27,6 +27,18 @@
     <version>7.18.1</version>
 </dependency>
 
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>3.2.5</version>
+    <configuration>
+        <includes>
+            <include>**/*Runner.java</include>
+        </includes>
+    </configuration>
+</plugin>
+
+	  
 
 <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-testng -->
 <dependency>
