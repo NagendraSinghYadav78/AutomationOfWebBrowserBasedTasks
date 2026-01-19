@@ -16,14 +16,18 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import io.cucumber.java.After;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.github.bonigarcia.wdm.WebDriverManager;
+
 import com.mailosaur.MailosaurClient;
 import com.mailosaur.MailosaurException;
 import com.mailosaur.models.Message;
@@ -56,9 +60,16 @@ public class Mylogin {
 	@Given("User is on the homepage of Flipkart")
 	
 	public void user_is_on_the_homepage_of_flipkart() {
-		driver = new ChromeDriver();
+		
+		WebDriverManager.chromedriver().setup();
+		ChromeOptions options = new ChromeOptions();
+		options.addArguments("--headless=new");
+		options.addArguments("--window-size=1920,1080");
+		options.addArguments("--disable-notifications");
+		driver = new ChromeDriver(options);
+		
 	    driver.get("https://www.flipkart.com/");
-	    driver.manage().window().maximize();
+	    //driver.manage().window().maximize();
 	    driver.findElement(By.linkText("Login")).click();
 	}
 	
@@ -67,15 +78,17 @@ public class Mylogin {
 	@When("user enters valid email {string} in Enter Email \\/ mobile number field")
 	public void user_enters_valid_email_in_enter_email_mobile_number_field(String string) {
 
-		WebElement value = driver.findElement(By.cssSelector("#container > div > div.VCR99n > div > div.Sm1-5F.col.col-3-5 > div > form > div.I-qZ4M.vLRlQb > input"));
-		value.sendKeys(string);
+		//WebElement value = driver.findElement(By.cssSelector("#container > div > div.VCR99n > div > div.Sm1-5F.col.col-3-5 > div > form > div.I-qZ4M.vLRlQb > input"));
+		driver.findElement(By.cssSelector(".c3Bd2c.yXUQVt")).sendKeys(string);
+		
+		//value.sendKeys(string);
 		
 		
 	}
 	@When("user clicks on request OTP button")
 	public void user_clicks_on_request_otp_button() throws IOException, MailosaurException, InterruptedException {
 
-		WebElement RequestOTPButton = driver.findElement(By.cssSelector("#container > div > div.VCR99n > div > div.Sm1-5F.col.col-3-5 > div > form > div.LSOAQH > button"));
+		WebElement RequestOTPButton = driver.findElement(By.cssSelector(".dSM5Ub.Kv3ekh.KcXDCU"));
 		Thread.sleep(2000);
 		RequestOTPButton.click();
 		
@@ -90,7 +103,7 @@ public class Mylogin {
 	    params.withServer(serverId);
 	   
 	    SearchCriteria criteria = new SearchCriteria();
-	    criteria.withSentTo("stand-morning@" + serverDomain);
+	    criteria.withSentTo("power-moment@" + serverDomain);
 	   
 	   Message message = mailosaur.messages().get(params, criteria);
 		   assertNotNull(message);
@@ -118,23 +131,38 @@ public class Mylogin {
 		   
 		   
 		   
-		   WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+		   WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+		   try {
+			   wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//span[contains(text(), 'power-moment@46m71knb.mailosaur.net')")));
+			   System.out.println("Otp page loaded");
+			   
+		   }catch (Exception e) {
+			   System.out.println("Otp page didnt load in time" + e.getMessage());
+		   }
+		   
+		   
 	        for (int i = 0; i < otp.length(); i++) {
-
+	        	String xpath ="//input[@data-sharkid='__" + (i + 1) + "']";
 	            // Find the input field using XPath
-	        	WebElement inputField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='XDRRi5']//input[@type='text'][" + (i + 1) + "]")));
-	        	inputField.click();
+	        	WebElement inputField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
+	        	
+	
 	        	inputField.sendKeys(String.valueOf(otp.charAt(i)));
 
 	            // Enter the corresponding digit of the OTP
 
-	            inputField.sendKeys(String.valueOf(otp.charAt(i)));
+	           
 	            Thread.sleep(200);
-
+	           
 	       }
 
 
-		   
+	        System.out.println("OTP entered successfully");
+            
+            WebElement verifyButton=wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@class='dSM5Ub VGJZ_8 KtnAdx']")));
+            verifyButton.click();
+            System.out.println("Verify button clicked");
+
 		   
 		   
 		   //driver.findElement(By.linkText("Verify"));
@@ -155,8 +183,18 @@ public class Mylogin {
 	public void account_name_should_be_displayed() {
 	    // Write code here that turns the phrase above into concrete actions
 		System.out.println("User is not logged in");
-		driver.quit();
+		
 	}
+	
+	@After
+	public void teardown()
+	{
+		if (driver !=null)
+		{
+			driver.quit();
+		}
+	}
+	
 	
 	
 }
