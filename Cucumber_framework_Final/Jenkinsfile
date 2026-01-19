@@ -1,36 +1,22 @@
 pipeline {
-    agent any  // This means Jenkins can run on any available machine/node.
+    agent any
+
+    tools {
+        maven 'Maven3'
+    }
 
     stages {
         stage('Checkout') {
             steps {
-                // This checks out your code from GitHub (already working in your logs).
-                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/NagendraSinghYadav78/AutomationOfWebBrowserBasedTasks.git'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                // This compiles your Java code and prepares it for testing.
-                // Assumes Maven; change to 'gradle build' if using Gradle.
-                bat 'mvn clean compile'  // Use 'sh' instead of 'bat' if on Linux/Mac.
+                git credentialsId: 'github-creds',
+                    url: 'https://github.com/NagendraSinghYadav78/AutomationOfWebBrowserBasedTasks.git'
             }
         }
 
         stage('Run Tests') {
             steps {
-                // This runs your Selenium/Cucumber tests.
-                // Assumes Maven; change to 'gradle test' if using Gradle.
-                bat 'mvn test'  // Use 'sh' instead of 'bat' if on Linux/Mac.
+                bat 'mvn clean test'
             }
-        }
-    }
-
-    post {
-        always {
-            // Optional: Archive test results or reports for viewing in Jenkins.
-            junit '**/target/surefire-reports/*.xml'  // For Maven test reports.
-            // You can add Cucumber reports here if needed, e.g., publishHTML or archiveArtifacts.
         }
     }
 }
