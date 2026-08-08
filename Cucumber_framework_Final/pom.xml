@@ -42,6 +42,18 @@
     <version>7.18.1</version>
 </dependency>
 
+<!-- ADDED (Aug 2026 revision): TestNG was previously only a transitive
+     dependency via cucumber-testng. Declared explicitly here since
+     PlainSeleniumBaselineRunner.java (the Baseline B experiment, no
+     Cucumber layer) uses TestNG annotations directly. -->
+<!-- https://mvnrepository.com/artifact/org.testng/testng -->
+<dependency>
+    <groupId>org.testng</groupId>
+    <artifactId>testng</artifactId>
+    <version>7.10.2</version>
+    <scope>test</scope>
+</dependency>
+
 <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
 <dependency>
     <groupId>org.seleniumhq.selenium</groupId>
