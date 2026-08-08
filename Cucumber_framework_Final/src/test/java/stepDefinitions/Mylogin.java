@@ -38,9 +38,15 @@ import java.util.*;
 
 
 public class Mylogin {
-	
-	
-	String apiKey = "BvcPY3K0oEcBrCkMiYfQzydzolNhUn3W";
+
+	// FIXED (Aug 2026 revision): The previous version hardcoded a live-looking
+	// Mailosaur API key directly in this source file, which was then committed
+	// to a public GitHub repository. That key should be treated as compromised:
+	// rotate/revoke it in the Mailosaur dashboard and never commit a real key
+	// again. It is now read from an environment variable instead.
+	//
+	// Set it before running: export MAILOSAUR_API_KEY=your_key_here
+	String apiKey = System.getenv("MAILOSAUR_API_KEY");
 	String serverId = "46m71knb";
 	String serverDomain = "46m71knb.mailosaur.net";
 	String from = "noreply@ncb.flipkart.com";
@@ -60,7 +66,13 @@ public class Mylogin {
 	@Given("User is on the homepage of Flipkart")
 	
 	public void user_is_on_the_homepage_of_flipkart() {
-		
+
+		if (apiKey == null || apiKey.isEmpty()) {
+			throw new IllegalStateException(
+				"MAILOSAUR_API_KEY environment variable is not set. This test requires a valid, "
+				+ "non-committed Mailosaur API key -- see the note at the top of this class.");
+		}
+
 		WebDriverManager.chromedriver().setup();
 		ChromeOptions options = new ChromeOptions();
 		options.addArguments("--headless=new");
@@ -68,6 +80,13 @@ public class Mylogin {
 		options.addArguments("--disable-notifications");
 		driver = new ChromeDriver(options);
 		
+	    // NOTE: unlike GreenKartStepDefinition/AddtoCart, this scenario tests a
+	    // real login/OTP flow that has no equivalent on the GreenKart demo site,
+	    // so it still targets live https://www.flipkart.com/. Because this hits
+	    // a real production authentication system, do NOT include it in tight
+	    // repeated (e.g. 30x) timing loops -- run it sparingly and treat it as a
+	    // functional check, not a timing benchmark, unless you have explicit
+	    // authorization to load-test Flipkart's login flow.
 	    driver.get("https://www.flipkart.com/");
 	    //driver.manage().window().maximize();
 	    driver.findElement(By.linkText("Login")).click();
@@ -133,7 +152,10 @@ public class Mylogin {
 		   
 		   WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
 		   try {
-			   wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//span[contains(text(), 'power-moment@46m71knb.mailosaur.net')")));
+			   // FIXED (Aug 2026 revision): the xpath string below was missing its
+			   // closing "]" bracket, which would throw InvalidSelectorException at
+			   // runtime rather than the intended wait/timeout behavior.
+			   wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//span[contains(text(), 'power-moment@46m71knb.mailosaur.net')]")));
 			   System.out.println("Otp page loaded");
 			   
 		   }catch (Exception e) {
