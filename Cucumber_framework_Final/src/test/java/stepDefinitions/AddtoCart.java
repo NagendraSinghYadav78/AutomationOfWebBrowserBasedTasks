@@ -19,9 +19,6 @@ import io.cucumber.java.en.When;
  * FIXED (Aug 2026 revision): Previously targeted live https://www.flipkart.com/
  * with hardcoded Flipkart CSS classes and a hardcoded pincode. Retargeted to
  * the real GreenKart demo app for the same reasons as GreenKartStepDefinition.
- * Selectors are best-effort from the site's documented structure -- verify
- * against the live DOM before your first real run (see class-level note in
- * GreenKartStepDefinition.java for why this could not be confirmed live here).
  */
 public class AddtoCart {
 
@@ -42,8 +39,14 @@ public class AddtoCart {
     public void user_searched_with_product_name(String productName) {
         WebElement searchBox = driver.findElement(By.className("search-keyword"));
         searchBox.sendKeys(productName);
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-                .until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.product h4.product-name")));
+        // FIXED (Aug 2026 revision): same race-condition fix as
+        // GreenKartStepDefinition -- wait for the actual filtered product
+        // text, not just "any product name is visible" (which is already
+        // true from the pre-filter list).
+        new WebDriverWait(driver, Duration.ofSeconds(10)).until(driver1 -> {
+            WebElement el = driver1.findElement(By.cssSelector("div.product h4.product-name"));
+            return el.getText().toLowerCase().contains(productName.toLowerCase()) ? el : null;
+        });
     }
 
     @Then("User adds the product to cart")
@@ -56,7 +59,10 @@ public class AddtoCart {
         // Open the cart preview
         WebElement cartIcon = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("a.cart-icon")));
         cartIcon.click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//h4[text()='PROCEED TO CHECKOUT']")));
+        // FIXED (Aug 2026 revision): confirmed live via DevTools -- this is a
+        // <button>, not an <h4> as originally guessed:
+        // <button class="disabled" type="button">PROCEED TO CHECKOUT</button>
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//button[text()='PROCEED TO CHECKOUT']")));
 
         driver.quit();
     }
