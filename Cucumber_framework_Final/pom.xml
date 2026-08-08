@@ -50,11 +50,13 @@
 </dependency>
 
 
-<dependency>
-    <groupId>com.aventstack</groupId>
-    <artifactId>extentreports-cucumber7-adapter</artifactId>
-    <version>1.14.0</version>
-</dependency>
+<!-- FIXED (Aug 2026 revision): removed com.aventstack:extentreports-cucumber7-adapter
+     here. This library's real Maven coordinate is
+     tech.grasshopper:extentreports-cucumber7-adapter (already included further
+     below); the com.aventstack version of this specific artifact does not
+     exist on Maven Central and caused "Could not find artifact" build
+     failures. The plain com.aventstack:extentreports (core library, not the
+     adapter) below is unaffected and correct. -->
 
 
 <!-- delete them later-->
@@ -112,11 +114,11 @@
 
 
 
-  	<dependency>
-  		<groupId>NSY</groupId>
-  		<artifactId>Cucumber</artifactId>
-  		<version>0.0.1-SNAPSHOT</version>
-  	</dependency>
+  	<!-- FIXED (Aug 2026 revision): removed NSY:Cucumber:0.0.1-SNAPSHOT.
+       This was not a real published artifact (it appears to reference this
+       project's own group/version placeholder) and Maven Central correctly
+       could not find it, causing "Could not find artifact" build failures.
+       It served no purpose in the dependency list. -->
   </dependencies>
 
   <build>
