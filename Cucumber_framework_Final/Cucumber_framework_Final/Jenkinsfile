@@ -1,0 +1,22 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven3'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'github-creds',
+                    url: 'https://github.com/NagendraSinghYadav78/AutomationOfWebBrowserBasedTasks.git'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                bat 'mvn clean test'
+            }
+        }
+    }
+}
