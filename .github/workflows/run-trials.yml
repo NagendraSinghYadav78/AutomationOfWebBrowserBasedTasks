@@ -1,0 +1,75 @@
+# ADDED (Aug 2026 revision): Runs the repeated-measures timing trials on
+# GitHub's own runners (which have normal internet access, Java, and Chrome
+# pre-installed) since the AI sandbox that prepared this workflow has none of
+# those. Trigger it manually from the Actions tab -- no local install needed.
+#
+# Setup (one time):
+#   1. Commit this file to your repo under .github/workflows/run-trials.yml
+#   2. Go to your repo on GitHub -> Actions tab -> "Run Timing Trials" -> Run workflow
+#   3. Set "trials" to e.g. 30, click Run workflow
+#   4. When it finishes (watch the progress bar), open the completed run and
+#      download the "timing-results" artifact (a zip containing
+#      timing-log.csv, timing-summary.csv, execution_time_chart.png)
+#
+# Cost: GitHub Actions is free for public repos, and gives a generous free
+# tier of minutes per month for private repos too.
+
+name: Run Timing Trials
+
+on:
+  workflow_dispatch:
+    inputs:
+      trials:
+        description: 'Number of repeated trials to run'
+        required: true
+        default: '30'
+
+jobs:
+  run-trials:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Cucumber_framework_Final
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Confirm Chrome is available
+        run: google-chrome --version
+
+      - name: Run repeated trials
+        run: |
+          N="${{ github.event.inputs.trials }}"
+          echo "Running $N trials"
+          for i in $(seq 1 "$N"); do
+            echo "=== Trial $i / $N ==="
+            mvn -q -Dtest=cucumberOptions.TestNGTestRunner \
+                -Dcucumber.filter.tags="not @tag1" \
+                test || true
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Analyze timing results
+        run: |
+          pip install pandas scipy matplotlib
+          python3 analyze_timings.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: timing-results
+          path: |
+            Cucumber_framework_Final/test-output/timing-log.csv
+            Cucumber_framework_Final/test-output/timing-summary.csv
+            Cucumber_framework_Final/test-output/execution_time_chart.png
