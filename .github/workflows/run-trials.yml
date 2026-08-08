@@ -44,14 +44,17 @@ jobs:
       - name: Confirm Chrome is available
         run: google-chrome --version
 
-      - name: Run repeated trials
+      - name: Run repeated trials (proposed framework + baseline)
         run: |
           N="${{ github.event.inputs.trials }}"
-          echo "Running $N trials"
+          echo "Running $N trials for the proposed Cucumber-BDD framework and the plain Selenium+TestNG baseline"
           for i in $(seq 1 "$N"); do
-            echo "=== Trial $i / $N ==="
+            echo "=== Proposed framework: Trial $i / $N ==="
             mvn -q -Dtest=cucumberOptions.TestNGTestRunner \
                 -Dcucumber.filter.tags="not @tag1" \
+                test || true
+            echo "=== Baseline B (plain Selenium+TestNG): Trial $i / $N ==="
+            mvn -q -Dtest=baseline.PlainSeleniumBaselineRunner \
                 test || true
           done
 
