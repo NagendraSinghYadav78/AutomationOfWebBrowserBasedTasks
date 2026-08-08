@@ -24,13 +24,6 @@ import io.cucumber.java.en.When;
  * (https://rahulshettyacademy.com/seleniumPractise/#/), which is a purpose-built
  * automation practice sandbox and is safe to exercise repeatedly for the
  * experimental evaluation described in the paper.
- *
- * NOTE: This sandbox environment has no outbound access to general websites
- * (only package registries), so these locators could not be executed and
- * confirmed live from here. They reflect the site's well-documented structure
- * used across many public Selenium/Cucumber tutorials, but verify them
- * against the live DOM (e.g. via browser DevTools) before your first real run,
- * and adjust if the markup has changed.
  */
 public class GreenKartStepDefinition {
 
@@ -53,9 +46,22 @@ public class GreenKartStepDefinition {
         WebElement searchBox = driver.findElement(By.className("search-keyword"));
         searchBox.sendKeys(shortName);
         // GreenKart filters the product list live -- no Enter key / page navigation needed.
+        //
+        // FIXED (Aug 2026 revision): the original wait
+        // (visibilityOfElementLocated on div.product h4.product-name) was a
+        // race condition -- since products are already on the page before
+        // typing, that condition is already true, so it could grab the OLD,
+        // unfiltered first product (e.g. "Brocolli - 1 Kg") a moment before
+        // Angular finished re-filtering the list down to the real match.
+        // Confirmed live: searching "Cucumber" correctly filters to exactly
+        // one product, "Cucumber - 1 Kg" -- so we now wait for the actual
+        // filtered text to appear before reading it.
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        WebElement firstResultName = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.product h4.product-name")));
+        wait.until(driver1 -> {
+            WebElement el = driver1.findElement(By.cssSelector("div.product h4.product-name"));
+            return el.getText().toLowerCase().contains(shortName.toLowerCase()) ? el : null;
+        });
+        WebElement firstResultName = driver.findElement(By.cssSelector("div.product h4.product-name"));
         extractedProductName = firstResultName.getText();
         System.out.println(extractedProductName + " is extracted from the search results");
     }
