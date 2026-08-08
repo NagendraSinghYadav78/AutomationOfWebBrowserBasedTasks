@@ -49,9 +49,12 @@ def main():
     summary.to_csv("test-output/timing-summary.csv", index=False)
     print("\nWrote test-output/timing-summary.csv")
 
-    # Quick bar chart: mean execution time per scenario with SD error bars
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.bar(summary["scenario"], summary["mean_ms"], yerr=summary["sd_ms"], capsize=5)
+    # Quick bar chart: mean execution time per scenario with SD error bars.
+    # Color-code proposed-framework scenarios vs. the plain Selenium+TestNG
+    # baseline (Section 4.4/9) so the comparison is visually clear.
+    colors = ['#F9A825' if 'baseline' in s.lower() else '#2E7D32' for s in summary['scenario']]
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    ax.bar(summary["scenario"], summary["mean_ms"], yerr=summary["sd_ms"], capsize=5, color=colors)
     ax.set_ylabel("Mean execution time (ms)")
     ax.set_title(f"Execution time per scenario (n={summary['n'].iloc[0] if len(summary) else 0} runs)")
     plt.xticks(rotation=20, ha="right")
@@ -59,9 +62,17 @@ def main():
     plt.savefig("test-output/execution_time_chart.png", dpi=150)
     print("Wrote test-output/execution_time_chart.png")
 
-    print("\nTo compare against a manual-testing or plain-Selenium baseline, repeat this")
-    print("process for each baseline (see baselines list in the paper's Experimental")
-    print("Design section) and merge the summaries into the paper's comparison table.")
+    baseline_rows = summary[summary['scenario'].str.contains('baseline', case=False)]
+    proposed_rows = summary[~summary['scenario'].str.contains('baseline', case=False)]
+    if len(baseline_rows) and len(proposed_rows):
+        print("\nProposed vs. baseline comparison is now available directly in the table above")
+        print("(rows without 'baseline' = proposed framework; rows with 'baseline' = plain")
+        print("Selenium+TestNG). Use these paired means/SDs to fill in the paper's Table 4")
+        print("comparison and, if desired, run a paired t-test or Wilcoxon signed-rank test")
+        print("between matched scenario pairs for statistical significance.")
+    else:
+        print("\nBaseline rows not found yet -- re-run after baseline.PlainSeleniumBaselineRunner")
+        print("has executed at least once (see run-trials.yml).")
 
 if __name__ == "__main__":
     main()
